@@ -7,6 +7,7 @@
 }
 
 body {
+  @apply font-body;
   margin: 0;
   overflow-x: hidden;
   background-color: #12050f;
@@ -28,7 +29,7 @@ body::before {
 
 @layer base {
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display font-bold;
+    @apply font-body font-extrabold tracking-tight;
   }
 }
 

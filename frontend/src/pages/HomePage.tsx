@@ -60,22 +60,13 @@ const HomePage: React.FC = () => {
                 Create and scale community-driven memecoins with a clean interface, fast flow, and tools built for real momentum.
               </p>
 
-              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3">
-                <GlowButton onClick={() => navigate('/market')} className="!w-full sm:!w-48 !py-4 !text-base">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-2">
+                <GlowButton onClick={() => navigate('/market')} className="!w-full sm:!w-56 !py-4 !text-base">
                   View Market
                 </GlowButton>
-                <GlowButton variant="secondary" onClick={() => navigate('/create')} className="!w-full sm:!w-48 !py-4 !text-base">
+                <GlowButton variant="secondary" onClick={() => navigate('/create')} className="!w-full sm:!w-56 !py-4 !text-base">
                   Create Token
                 </GlowButton>
-                <button 
-                  onClick={() => navigate('/bridge')}
-                  className="!w-full sm:!w-auto px-6 py-4 rounded-xl bg-white/5 border border-white/10 text-white/70 hover:text-white hover:bg-white/10 transition-all font-body font-semibold text-base flex items-center justify-center gap-2"
-                >
-                  Bridge Assets
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                  </svg>
-                </button>
               </div>
             </div>
 

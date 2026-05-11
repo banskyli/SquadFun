@@ -94,14 +94,14 @@ const BridgePage: React.FC = () => {
         >
           {/* Header Section */}
           <motion.div className="text-center mb-16 bridge-header" variants={itemVariants}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
+            <div className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary/10 border border-primary/20 mb-6">
               <span className="relative flex h-2 w-2">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              <span className="text-[10px] font-mono font-bold text-primary uppercase tracking-[0.2em]">Official Ecosystem Gateways</span>
+              <span className="text-[11px] font-mono font-bold text-primary uppercase tracking-wider">Official Ecosystem Gateways</span>
             </div>
-            <h1 className="text-6xl md:text-8xl font-body font-black mb-6 text-white tracking-tight leading-none">
+            <h1 className="text-6xl md:text-7xl mb-6 text-white leading-tight">
               Portal to <span className="text-primary-glow">Monad</span>
             </h1>
             <p className="text-white/60 text-lg md:text-xl max-w-2xl mx-auto font-medium leading-relaxed">
@@ -118,7 +118,7 @@ const BridgePage: React.FC = () => {
               { label: 'Security Status', value: 'Verified', detail: 'Trusted Bridge Partners' }
             ].map((stat, i) => (
               <div key={i} className="bg-surface/30 border border-white/5 p-8 rounded-3xl backdrop-blur-md hover:border-primary/20 transition-all group">
-                <div className="text-[10px] font-mono text-white/40 uppercase tracking-widest mb-2 group-hover:text-primary/60 transition-colors">{stat.label}</div>
+                <div className="text-[11px] font-mono font-bold text-white/40 uppercase tracking-wider mb-2 group-hover:text-primary/60 transition-colors">{stat.label}</div>
                 <div className="text-3xl font-bold text-white mb-1">{stat.value}</div>
                 <div className="text-xs text-white/30">{stat.detail}</div>
               </div>
@@ -141,7 +141,7 @@ const BridgePage: React.FC = () => {
 
                 <div className="relative z-10 flex flex-col h-full">
                   <div className="flex items-start justify-between mb-6">
-                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center p-2 shadow-inner border border-white/10">
+                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center p-2 shadow-inner border border-white/10 shrink-0">
                       <img
                         src={bridge.logo}
                         alt={bridge.name}
@@ -151,7 +151,7 @@ const BridgePage: React.FC = () => {
                         }}
                       />
                     </div>
-                    <span className="text-[10px] font-mono font-black uppercase tracking-widest text-primary/80 bg-primary/10 px-3 py-1 rounded-full border border-primary/20">
+                    <span className="text-[11px] font-mono font-bold uppercase tracking-wider text-primary/80 bg-primary/10 px-3 py-1 rounded-full border border-primary/20 whitespace-nowrap">
                       {bridge.type}
                     </span>
                   </div>
