@@ -5,14 +5,16 @@ import confetti from 'canvas-confetti';
 import { supabase } from '@/config/supabase';
 import { useAccount, useWriteContract, useBalance } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
-import { FACTORY_ADDRESS, CREATION_FEE, GRADUATION_TARGET } from '@/config/constants';
+import { FACTORY_ADDRESSES, CREATION_FEE, GRADUATION_TARGET } from '@/config/constants';
 import { MEME_FACTORY_ABI } from '@/config/abi';
 import { useNavigate } from 'react-router-dom';
 import { showToast } from '@/components/shared/Toast';
+import NetworkGuard from '@/components/shared/NetworkGuard';
 
 const CreateTokenPage: React.FC = () => {
-  const { address } = useAccount();
+  const { address, chain } = useAccount();
   const navigate = useNavigate();
+  const factoryAddress = FACTORY_ADDRESSES[chain?.id || 10143] || FACTORY_ADDRESSES[10143];
   const { writeContractAsync } = useWriteContract();
   const [isCasting, setIsCasting] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -93,7 +95,7 @@ const CreateTokenPage: React.FC = () => {
       const totalValue = creationFee + buyAmount;
 
       const hash = await writeContractAsync({
-        address: FACTORY_ADDRESS as `0x${string}`,
+        address: factoryAddress,
         abi: MEME_FACTORY_ABI,
         functionName: 'createToken',
         args: [formData.name, formData.symbol, formData.description, formData.imageUrl],
@@ -121,23 +123,24 @@ const CreateTokenPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-20">
-      <div className="glass-card p-8 md:p-10 border-primary/20 bg-surface/40 mb-12 relative overflow-hidden">
-        <div className="absolute -top-16 -right-10 w-56 h-56 bg-primary/10 blur-[110px] rounded-full pointer-events-none" />
-        <div className="absolute -bottom-24 -left-14 w-56 h-56 bg-monad/10 blur-[120px] rounded-full pointer-events-none" />
-        <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-          <div className="max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 mb-5">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-white/70">Spell Workshop</span>
+    <NetworkGuard requiredChainId={10143} networkName="Monad Testnet">
+      <div className="max-w-7xl mx-auto px-6 py-20">
+        <div className="glass-card p-8 md:p-10 border-primary/20 bg-surface/40 mb-12 relative overflow-hidden">
+          <div className="absolute -top-16 -right-10 w-56 h-56 bg-primary/10 blur-[110px] rounded-full pointer-events-none" />
+          <div className="absolute -bottom-24 -left-14 w-56 h-56 bg-monad/10 blur-[120px] rounded-full pointer-events-none" />
+          <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            <div className="max-w-2xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-white/10 bg-white/5 mb-5">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-[10px] uppercase tracking-[0.14em] font-semibold text-white/70">Spell Workshop</span>
+              </div>
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-body font-black tracking-normal leading-[1.08] mb-4">
+                Cast a New Spell
+              </h1>
+              <p className="text-white/60 font-body text-base md:text-lg leading-relaxed">
+                Deploy your memecoin on Monad in seconds. Fill in the lore, lock the vibe, and launch straight into the curve.
+              </p>
             </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-body font-black tracking-normal leading-[1.08] mb-4">
-              Cast a New Spell
-            </h1>
-            <p className="text-white/60 font-body text-base md:text-lg leading-relaxed">
-              Deploy your memecoin on Monad testnet in seconds. Fill in the lore, lock the vibe, and launch straight into the curve.
-            </p>
-          </div>
           <div className="grid grid-cols-2 gap-4 min-w-full sm:min-w-[340px] lg:min-w-[360px]">
             <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-4 text-center">
               <div className="text-xl md:text-2xl font-body font-extrabold text-primary-highlight">~1s</div>
@@ -278,6 +281,7 @@ const CreateTokenPage: React.FC = () => {
         </div>
       </div>
     </div>
+    </NetworkGuard>
   );
 };
 

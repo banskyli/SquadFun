@@ -15,11 +15,25 @@ export const monadTestnet = defineChain({
   testnet: true,
 });
 
+export const monadMainnet = defineChain({
+  id: 143,
+  name: 'Monad Mainnet',
+  nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
+  rpcUrls: {
+    default: { http: ['https://rpc.monad.xyz'] },
+  },
+  blockExplorers: {
+    default: { name: 'MonadExplorer', url: 'https://monadexplorer.com' },
+  },
+  testnet: false,
+});
+
 export const config = getDefaultConfig({
-  appName: 'MemeForge',
-  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // User should replace this
-  chains: [monadTestnet],
+  appName: 'SquadFun',
+  projectId: 'YOUR_WALLETCONNECT_PROJECT_ID',
+  chains: [monadMainnet, monadTestnet],
   transports: {
+    [monadMainnet.id]: http(),
     [monadTestnet.id]: http(),
   },
   ssr: true,

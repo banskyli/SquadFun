@@ -12,7 +12,13 @@ export const MONAD_TESTNET_CONFIG = {
   nativeCurrency: { name: 'MON', symbol: 'MON', decimals: 18 },
 };
 
-export const FACTORY_ADDRESS = (import.meta.env.VITE_FACTORY_ADDRESS as `0x${string}`) || '0xBB8702a0A0EF0844651c05555b3312dc2E0e913c';
+export const FACTORY_ADDRESSES: Record<number, `0x${string}`> = {
+  10143: (import.meta.env.VITE_FACTORY_ADDRESS_TESTNET as `0x${string}`) || '0xBB8702a0A0EF0844651c05555b3312dc2E0e913c',
+  143: (import.meta.env.VITE_FACTORY_ADDRESS_MAINNET as `0x${string}`) || '0x0000000000000000000000000000000000000000', // Placeholder for Mainnet
+};
+
+// Default fallback for legacy code
+export const FACTORY_ADDRESS = FACTORY_ADDRESSES[10143];
 
 export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:3001') + '/api';
 

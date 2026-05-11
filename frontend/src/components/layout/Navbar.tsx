@@ -37,25 +37,13 @@ const Navbar: React.FC = () => {
 
         <div className="hidden md:flex items-center gap-8">
           <Link to="/market" className={`text-sm font-medium transition-colors ${isActive('/market') ? 'text-primary' : 'text-white/60 hover:text-white'}`}>Market</Link>
+          <Link to="/bridge" className={`text-sm font-medium transition-colors ${isActive('/bridge') ? 'text-primary' : 'text-white/60 hover:text-white'}`}>Bridge</Link>
           <Link to="/hall-of-fame" className={`text-sm font-medium transition-colors ${isActive('/hall-of-fame') ? 'text-primary' : 'text-white/60 hover:text-white'}`}>Hall of Fame</Link>
           <Link to="/create" className={`text-sm font-medium transition-colors ${isActive('/create') ? 'text-primary' : 'text-white/60 hover:text-white'}`}>Cast Spell</Link>
           {isConnected && (
             <Link to={`/profile/${address}`} className={`text-sm font-medium transition-colors ${isProfileActive() ? 'text-primary' : 'text-white/60 hover:text-white'}`}>My Profile</Link>
           )}
         </div>
-
-        <div className="flex items-center gap-4">
-          {isConnected && balance && (
-            <div className="hidden lg:flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
-              <span className="text-[10px] uppercase tracking-[0.12em] text-white/40 font-semibold border-r border-white/10 pr-2.5">Your Mana</span>
-              <span className="font-mono text-sm font-bold text-primary-glow">{formatMON(balance.value)}</span>
-            </div>
-          )}
-          
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/30">
-            <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-mono font-semibold text-primary-highlight uppercase tracking-[0.06em]">Monad Testnet</span>
-          </div>
 
           <ConnectButton.Custom>
             {({ account, chain, openAccountModal, openChainModal, openConnectModal, mounted }) => {
@@ -72,7 +60,31 @@ const Navbar: React.FC = () => {
                       userSelect: 'none',
                     },
                   })}
+                  className="flex items-center gap-4"
                 >
+                  {connected && balance && (
+                    <div className="hidden lg:flex items-center gap-2.5 px-4 py-2 rounded-xl bg-white/5 border border-white/10">
+                      <span className="text-[10px] uppercase tracking-[0.12em] text-white/40 font-semibold border-r border-white/10 pr-2.5">Your Mana</span>
+                      <span className="font-mono text-sm font-bold text-primary-glow">{formatMON(balance.value)}</span>
+                    </div>
+                  )}
+
+                  {ready && (
+                    <button 
+                      onClick={openChainModal}
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-full border transition-all ${
+                        chain?.unsupported 
+                          ? 'bg-red-500/10 border-red-500/30 text-red-400' 
+                          : 'bg-primary/10 border-primary/30 text-primary-highlight hover:bg-primary/20'
+                      }`}
+                    >
+                      <div className={`w-2 h-2 rounded-full animate-pulse ${chain?.unsupported ? 'bg-red-400' : 'bg-emerald-400'}`} />
+                      <span className="text-[10px] font-mono font-semibold uppercase tracking-[0.06em]">
+                        {chain?.unsupported ? 'Unsupported' : (chain?.name || 'Select Network')}
+                      </span>
+                    </button>
+                  )}
+
                   {(() => {
                     if (!connected) {
                       return (
@@ -88,7 +100,7 @@ const Navbar: React.FC = () => {
                     if (chain.unsupported) {
                       return (
                         <button onClick={openChainModal} className="bg-red-400 text-white px-6 py-2.5 rounded-xl font-body font-semibold tracking-[0.04em]">
-                          Wrong Network
+                          Switch Network
                         </button>
                       );
                     }
@@ -117,7 +129,6 @@ const Navbar: React.FC = () => {
             }}
           </ConnectButton.Custom>
         </div>
-      </div>
     </nav>
   );
 };

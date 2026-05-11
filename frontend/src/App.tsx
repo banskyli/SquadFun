@@ -13,6 +13,7 @@ import CreateTokenPage from './pages/CreateTokenPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import HallOfFamePage from './pages/HallOfFamePage';
 import ProfilePage from './pages/ProfilePage';
+import BridgePage from './pages/BridgePage';
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ function App() {
               <Route path="/" element={<Layout />}>
                 <Route index element={<HomePage />} />
                 <Route path="market" element={<MarketPage />} />
+                <Route path="bridge" element={<BridgePage />} />
                 <Route path="token/:address" element={<TokenDetailPage />} />
                 <Route path="create" element={<CreateTokenPage />} />
                 <Route path="leaderboard" element={<LeaderboardPage />} />
