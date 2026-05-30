@@ -92,16 +92,7 @@ const processBuyEvent = async (tokenAddress: string, symbol: string, buyer: stri
     }
 };
 
-const setupTokenListeners = (tokenAddress: string, symbol: string, provider: ethers.Provider) => {
-  if (activeListeners.has(tokenAddress.toLowerCase())) return;
-  const contract = new ethers.Contract(tokenAddress, TOKEN_ABI, provider);
-  console.log(`  - Listening on: ${symbol} (${tokenAddress})`);
-
-  contract.on("TokensPurchased", (buyer, monIn, tokensOut, newPrice, event) => {
-    processBuyEvent(tokenAddress, symbol, buyer, monIn, tokensOut, newPrice, event.log.transactionHash);
-  });
-
-  contract.on("TokensSold", async (seller, tokensIn, monOut, newPrice, event) => {
+const processSellEvent = async (tokenAddress: string, symbol: string, seller: string, tokensIn: bigint, monOut: bigint, newPrice: bigint, txHash: string) => {
     const monAmountStr = ethers.formatEther(monOut);
     const tokenAmountStr = ethers.formatUnits(tokensIn, 18);
     const priceStr = ethers.formatEther(newPrice);
@@ -110,13 +101,15 @@ const setupTokenListeners = (tokenAddress: string, symbol: string, provider: eth
     // Calculate % change relative to initial virtual price
     const priceChange = ((currentPriceNum - INITIAL_VIRTUAL_PRICE) / INITIAL_VIRTUAL_PRICE) * 100;
     
-    const txHash = event.log.transactionHash;
+    const lowerTxHash = txHash.toLowerCase();
+    const lowerSeller = seller.toLowerCase();
+    const lowerTokenAddress = tokenAddress.toLowerCase();
 
     try {
-      const existingTrade = await prisma.trade.findUnique({ where: { txHash: txHash.toLowerCase() } });
+      const existingTrade = await prisma.trade.findUnique({ where: { txHash: lowerTxHash } });
       if (existingTrade) return;
 
-      const token = await prisma.token.findUnique({ where: { contractAddress: tokenAddress.toLowerCase() } });
+      const token = await prisma.token.findUnique({ where: { contractAddress: lowerTokenAddress } });
       const currentReserve = Number(token?.reserveMon || 0);
       const newReserve = Math.max(0, currentReserve - Number(monAmountStr));
       const newMC = (newReserve * 10 / 7).toString();
@@ -124,18 +117,18 @@ const setupTokenListeners = (tokenAddress: string, symbol: string, provider: eth
       await prisma.$transaction([
         prisma.trade.create({
           data: {
-            tokenAddress: tokenAddress.toLowerCase(),
-            traderAddress: seller.toLowerCase(),
+            tokenAddress: lowerTokenAddress,
+            traderAddress: lowerSeller,
             type: 'sell',
             ethAmount: monAmountStr,
             tokenAmount: tokenAmountStr,
             priceAtTrade: priceStr,
-            txHash: txHash.toLowerCase(),
+            txHash: lowerTxHash,
             timestamp: new Date()
           }
         }),
         prisma.token.update({
-          where: { contractAddress: tokenAddress.toLowerCase() },
+          where: { contractAddress: lowerTokenAddress },
           data: {
             price: priceStr,
             priceChange24h: priceChange,
@@ -145,14 +138,14 @@ const setupTokenListeners = (tokenAddress: string, symbol: string, provider: eth
           } as any
         }),
         prisma.user.upsert({
-          where: { walletAddress: seller.toLowerCase() },
+          where: { walletAddress: lowerSeller },
           update: { totalTraded: { increment: 1 } },
-          create: { walletAddress: seller.toLowerCase(), totalTraded: 1, username: `user_${seller.toLowerCase().slice(2, 6)}` }
+          create: { walletAddress: lowerSeller, totalTraded: 1, username: `user_${lowerSeller.slice(2, 6)}` }
         })
       ]);
 
-      broadcast(tokenAddress.toLowerCase(), 'trade_update', {
-        tokenAddress: tokenAddress.toLowerCase(),
+      broadcast(lowerTokenAddress, 'trade_update', {
+        tokenAddress: lowerTokenAddress,
         type: 'sell',
         price: priceStr,
         priceChange: priceChange,
@@ -162,12 +155,19 @@ const setupTokenListeners = (tokenAddress: string, symbol: string, provider: eth
         traderAddress: seller,
         txHash: txHash
       });
+      console.log(`✅ Indexed Sell for ${symbol}: ${priceChange.toFixed(2)}%`);
     } catch (error) {
       console.error(`❌ Error indexing Sell for ${symbol}:`, error);
     }
-  });
+};
 
-  activeListeners.add(tokenAddress.toLowerCase());
+const indexedTokens = new Set<string>();
+const tokenSymbols = new Map<string, string>();
+
+const registerToken = (tokenAddress: string, symbol: string) => {
+  const addr = tokenAddress.toLowerCase();
+  indexedTokens.add(addr);
+  tokenSymbols.set(addr, symbol);
 };
 
 export const startIndexer = async () => {
@@ -180,9 +180,48 @@ export const startIndexer = async () => {
 
   try {
     const tokens = await prisma.token.findMany();
+    console.log(`ℹ️ Loaded ${tokens.length} tokens from database.`);
     for (const token of tokens) {
-      setupTokenListeners(token.contractAddress, token.symbol, provider);
+      registerToken(token.contractAddress, token.symbol);
     }
+
+    // Set up single global event filter for all indexed tokens
+    const tokenInterface = new ethers.Interface(TOKEN_ABI);
+    const purchaseTopic = ethers.id("TokensPurchased(address,uint256,uint256,uint256)");
+    const soldTopic = ethers.id("TokensSold(address,uint256,uint256,uint256)");
+
+    const filter = {
+      topics: [
+        [purchaseTopic, soldTopic]
+      ]
+    };
+
+    console.log('📡 Starting global token event listener...');
+    provider.on(filter, async (log) => {
+      const tokenAddress = log.address.toLowerCase();
+      if (!indexedTokens.has(tokenAddress)) return;
+
+      const symbol = tokenSymbols.get(tokenAddress) || 'TOKEN';
+
+      try {
+        const parsed = tokenInterface.parseLog({
+          topics: log.topics as string[],
+          data: log.data
+        });
+
+        if (!parsed) return;
+
+        if (parsed.name === 'TokensPurchased') {
+          const [buyer, monIn, tokensOut, newPrice] = parsed.args;
+          await processBuyEvent(tokenAddress, symbol, buyer, monIn, tokensOut, newPrice, log.transactionHash);
+        } else if (parsed.name === 'TokensSold') {
+          const [seller, tokensIn, monOut, newPrice] = parsed.args;
+          await processSellEvent(tokenAddress, symbol, seller, tokensIn, monOut, newPrice, log.transactionHash);
+        }
+      } catch (error) {
+        console.error(`❌ Error parsing log for ${symbol} at ${log.transactionHash}:`, error);
+      }
+    });
 
     const factoryAddress = process.env.FACTORY_ADDRESS;
     if (factoryAddress) {
@@ -217,7 +256,8 @@ export const startIndexer = async () => {
             create: { walletAddress: creator.toLowerCase(), totalCreated: 1, username: `user_${creator.toLowerCase().slice(2, 6)}` }
           });
 
-          setupTokenListeners(lowerTokenAddress, symbol, provider);
+          registerToken(lowerTokenAddress, symbol);
+          console.log(`🆕 Registered new token: ${symbol} (${lowerTokenAddress})`);
 
           // Check for initial buy in the same block
           const tokenContract = new ethers.Contract(tokenAddress, TOKEN_ABI, provider);

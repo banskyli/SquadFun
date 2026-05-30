@@ -13,7 +13,7 @@ export const MONAD_TESTNET_CONFIG = {
 };
 
 export const FACTORY_ADDRESSES: Record<number, `0x${string}`> = {
-  10143: (import.meta.env.VITE_FACTORY_ADDRESS_TESTNET as `0x${string}`) || '0xBB8702a0A0EF0844651c05555b3312dc2E0e913c',
+  10143: (import.meta.env.VITE_FACTORY_ADDRESS_TESTNET as `0x${string}`) || (import.meta.env.VITE_FACTORY_ADDRESS as `0x${string}`) || '0x69b8fc182d1af9434fF1f1CEedcb10bE5F498933',
   143: (import.meta.env.VITE_FACTORY_ADDRESS_MAINNET as `0x${string}`) || '0x0000000000000000000000000000000000000000', // Placeholder for Mainnet
 };
 
